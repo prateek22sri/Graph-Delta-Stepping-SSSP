@@ -101,6 +101,7 @@ class Graph:
 
     def deltaStepping(self):
 
+        
         # initialize property map
         for node in self.nodes:
             self.propertyMap[node] = self.infinity
