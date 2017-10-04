@@ -1,7 +1,7 @@
 #!usr/bin/env python
 
-'''
-Delta Stepping Algorithm implementation of SSSP
+"""
+This code is implementation of sequential Delta Stepping
 
 Author : Prateek Srivastava
 Date Created : 09-23-2017
@@ -17,7 +17,7 @@ Paper :
        shorttitle = {Δ-stepping},
        url = {http://www.sciencedirect.com/science/article/pii/S0196677403000762},
        doi = {10.1016/S0196-6774(03)00076-2},
-'''
+"""
 
 import sys
 from collections import defaultdict, OrderedDict
@@ -31,10 +31,10 @@ class Graph:
         self.nodes = set()
         self.edges = defaultdict(list)
         self.distances = {}
-        self.delta = int(sys.argv[1])
+        self.delta = 5
         self.propertyMap = {}
         self.workItems = []
-        self.sourceVertex = int(sys.argv[2])
+        self.sourceVertex = 0
         self.infinity = 999999999
         self.B = OrderedDict()
 
@@ -87,12 +87,20 @@ class Graph:
             # update the property map
             self.propertyMap[w] = x
 
-    def findRequests(self, vertices):
+    def findRequests(self, vertices, kind):
+
         tmp = {}
-        edgeVectors = []
         for u in vertices:
             for v in self.edges[u]:
-                tmp[v] = self.propertyMap[u] + self.distances[(u, v)]
+                edgeWeight = self.propertyMap[u] + self.distances[(u, v)]
+                if kind == 'light':
+                    if edgeWeight <= self.delta:
+                        tmp[v] = edgeWeight
+                elif kind == 'heavy':
+                    if edgeWeight > self.delta:
+                        tmp[v] = edgeWeight
+                else:
+                    return "Error: No such kind of edges " + kind
         return tmp
 
     def relaxRequests(self, request):
@@ -100,18 +108,20 @@ class Graph:
             self.relax(key, value)
 
     def deltaStepping(self):
-
-        
-        # initialize property map
+        """ This is the main function to implement the algorithm """
         for node in self.nodes:
             self.propertyMap[node] = self.infinity
         self.relax(self.sourceVertex, 0)
         while self.B:
             i = min(self.B.keys())
-            iValue = self.B[i]
-            del self.B[i]
-            Req = self.findRequests(iValue)
-            self.relaxRequests(Req)
+            r = []
+            while i in self.B:
+                req = self.findRequests(self.B[i], 'light')
+                r += self.B[i]
+                del self.B[i]
+                self.relaxRequests(req)
+            req = self.findRequests(r, 'heavy')
+            self.relaxRequests(req)
 
 
 def main():
