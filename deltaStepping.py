@@ -1,4 +1,4 @@
-#!usr/bin/env python
+#!/usr/bin/env python
 
 """
 This code is implementation of sequential Delta Stepping
@@ -36,6 +36,8 @@ class Graph:
         self.workItems = []
         self.sourceVertex = 0
         self.infinity = 999999999
+        self.totalNodes = 0
+        self.totalEdges = 0
         self.B = OrderedDict()
 
     def add_node(self, node_label):
@@ -59,6 +61,27 @@ class Graph:
             fileList = [[int(i) for i in x.strip('\n').split()] for x in fileList]
         for edge in fileList:
             self.add_edge(edge[0], edge[1], edge[2])
+
+    def readGRFile(self, filename):
+        ctr = -1
+        with open(filename, 'r') as f:
+            for line in f:
+                if ctr == -1:
+                    ctr += 1
+                    tmp = [int(x) for x in line.strip('\n').split()]
+                    if int(tmp[2]) == 1:
+                        self.totalNodes = int(tmp[0])
+                        self.totalEdges = int(tmp[1])
+                        for x in range(0,self.totalNodes):
+                            self.add_node(x)
+                    else:
+                        print("Error Can't print this type of a graph")
+                        exit(1)
+                else:
+                    tmp = [int(x) for x in line.strip('\n').split()]
+                    for num in range(0, len(tmp), 2):
+                        self.add_edge(ctr, tmp[num], tmp[num + 1])
+                    ctr += 1
 
     def relax(self, w, x):
 
@@ -126,7 +149,8 @@ class Graph:
 
 def main():
     g = Graph()
-    g.readGraphFile('sampleGraph.txt')
+    # g.readGraphFile('sampleGraph.txt')
+    g.readGRFile('file11.gr')
     g.deltaStepping()
     print("The shortest path from ", g.sourceVertex, " is ", g.propertyMap)
 
