@@ -19,17 +19,11 @@ Paper :
        doi = {10.1016/S0196-6774(03)00076-2},
 """
 
-import sys
-from collections import defaultdict, OrderedDict
 from math import ceil
+import networkx as nx
 
-
-class Graph:
-    """ Graph creation courtesy : https://gist.github.com/econchick/4666413 """
-
+class algorithm:
     def __init__(self):
-        self.nodes = set()
-        self.edges = defaultdict(list)
         self.distances = {}
         self.delta = 5
         self.propertyMap = {}
@@ -38,50 +32,7 @@ class Graph:
         self.infinity = 999999999
         self.totalNodes = 0
         self.totalEdges = 0
-        self.B = OrderedDict()
-
-    def add_node(self, node_label):
-        self.nodes.add(node_label)
-
-    def add_edge(self, from_node, to_node, distance):
-
-        if from_node not in self.nodes:
-            self.add_node(from_node)
-        if to_node not in self.nodes:
-            self.add_node(to_node)
-
-        self.edges[from_node].append(to_node)
-        self.edges[to_node].append(from_node)
-        self.distances[(from_node, to_node)] = distance
-        self.distances[(to_node, from_node)] = distance
-
-    def readGraphFile(self, filename):
-        with open(filename) as f:
-            fileList = list(f)
-            fileList = [[int(i) for i in x.strip('\n').split()] for x in fileList]
-        for edge in fileList:
-            self.add_edge(edge[0], edge[1], edge[2])
-
-    def readGRFile(self, filename):
-        ctr = -1
-        with open(filename, 'r') as f:
-            for line in f:
-                if ctr == -1:
-                    ctr += 1
-                    tmp = [int(x) for x in line.strip('\n').split()]
-                    if int(tmp[2]) == 1:
-                        self.totalNodes = int(tmp[0])
-                        self.totalEdges = int(tmp[1])
-                        for x in range(0,self.totalNodes):
-                            self.add_node(x)
-                    else:
-                        print("Error Can't print this type of a graph")
-                        exit(1)
-                else:
-                    tmp = [int(x) for x in line.strip('\n').split()]
-                    for num in range(0, len(tmp), 2):
-                        self.add_edge(ctr, tmp[num], tmp[num + 1])
-                    ctr += 1
+        self.B = {}
 
     def relax(self, w, x):
 
@@ -110,12 +61,12 @@ class Graph:
             # update the property map
             self.propertyMap[w] = x
 
-    def findRequests(self, vertices, kind):
+    def findRequests(self, vertices, kind, G):
 
         tmp = {}
         for u in vertices:
-            for v in self.edges[u]:
-                edgeWeight = self.propertyMap[u] + self.distances[(u, v)]
+            for v in G.neighbors(u):
+                edgeWeight = self.propertyMap[u] + G.get_edge_data(u, v)['weight']
                 if kind == 'light':
                     if edgeWeight <= self.delta:
                         tmp[v] = edgeWeight
@@ -130,29 +81,72 @@ class Graph:
         for key, value in request.items():
             self.relax(key, value)
 
-    def deltaStepping(self):
+    def deltaStepping(self, G):
         """ This is the main function to implement the algorithm """
-        for node in self.nodes:
+        for node in G.nodes():
             self.propertyMap[node] = self.infinity
+
         self.relax(self.sourceVertex, 0)
         while self.B:
             i = min(self.B.keys())
             r = []
             while i in self.B:
-                req = self.findRequests(self.B[i], 'light')
+                req = self.findRequests(self.B[i], 'light', G)
                 r += self.B[i]
                 del self.B[i]
                 self.relaxRequests(req)
-            req = self.findRequests(r, 'heavy')
+            req = self.findRequests(r, 'heavy', G)
             self.relaxRequests(req)
 
+    def metisReader(self, filename, G):
+        ctr = -1
+        with open(filename, 'r') as f:
+            for line in f:
+                if ctr == -1:
+                    ctr += 1
+                    tmp = [int(x) for x in line.strip('\n').split()]
+                    if int(tmp[2]) == 1:
+                        self.totalNodes = int(tmp[0])
+                        self.totalEdges = int(tmp[1])
+
+                    else:
+                        print("Error Can't print this type of a graph")
+                        exit(1)
+                else:
+                    tmp = [int(x) for x in line.strip('\n').split()]
+                    for num in range(0, len(tmp), 2):
+                        G.add_edge(ctr, tmp[num] - 1, weight=tmp[num + 1])
+                    ctr += 1
+
+    def readEdgeList(self, filename, G):
+        with open(filename, 'r') as f:
+            fileList = list(f)
+            fileList = [[int(i) for i in x.strip('\n').split()] for x in fileList]
+        for edge in fileList:
+            G.add_edge(edge[0], edge[1], weight=edge[2])
+
+
+    def validate(self, G):
+        p = nx.single_source_dijkstra(G, 0)
+        if p[0] == self.propertyMap:
+            return True
+        else:
+            for k,v in p[0].items():
+                if p[0][k]!=self.propertyMap[k]:
+                    print(k," value in ground truth is ",p[0][k], " and value in delta stepping is ",self.propertyMap[k])
+            return False
 
 def main():
-    g = Graph()
-    # g.readGraphFile('sampleGraph.txt')
-    g.readGRFile('file11.gr')
-    g.deltaStepping()
-    print("The shortest path from ", g.sourceVertex, " is ", g.propertyMap)
+    G = nx.path_graph(0)
+    filename = 'file11.gr'
+    # filename = 'sampleGraph.gr'
+    a = algorithm()
+    a.metisReader(filename, G)
+    a.deltaStepping(G)
+    if not a.validate(G):
+        print("Error : The algorithm is incorrect")
+    else:
+        print("The shortest path from ", a.sourceVertex, " is ", a.propertyMap)
 
 
 if __name__ == '__main__':
