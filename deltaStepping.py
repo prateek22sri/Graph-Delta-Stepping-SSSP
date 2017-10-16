@@ -22,6 +22,7 @@ Paper :
 from math import ceil
 import networkx as nx
 
+
 class algorithm:
     def __init__(self):
         self.distances = {}
@@ -125,16 +126,17 @@ class algorithm:
         for edge in fileList:
             G.add_edge(edge[0], edge[1], weight=edge[2])
 
-
     def validate(self, G):
         p = nx.single_source_dijkstra(G, 0)
         if p[0] == self.propertyMap:
             return True
         else:
-            for k,v in p[0].items():
-                if p[0][k]!=self.propertyMap[k]:
-                    print(k," value in ground truth is ",p[0][k], " and value in delta stepping is ",self.propertyMap[k])
+            for k, v in p[0].items():
+                if p[0][k] != self.propertyMap[k]:
+                    print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ",
+                          self.propertyMap[k])
             return False
+
 
 def main():
     G = nx.path_graph(0)
