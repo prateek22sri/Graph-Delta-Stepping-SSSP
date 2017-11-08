@@ -21,6 +21,7 @@ Paper :
 
 from math import ceil
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class algorithm:
@@ -99,32 +100,12 @@ class algorithm:
             req = self.findRequests(r, 'heavy', G)
             self.relaxRequests(req)
 
-    def metisReader(self, filename, G):
-        ctr = -1
-        with open(filename, 'r') as f:
-            for line in f:
-                if ctr == -1:
-                    ctr += 1
-                    tmp = [int(x) for x in line.strip('\n').split()]
-                    if int(tmp[2]) == 1:
-                        self.totalNodes = int(tmp[0])
-                        self.totalEdges = int(tmp[1])
-
-                    else:
-                        print("Error Can't print this type of a graph")
-                        exit(1)
-                else:
-                    tmp = [int(x) for x in line.strip('\n').split()]
-                    for num in range(0, len(tmp), 2):
-                        G.add_edge(ctr, tmp[num] - 1, weight=tmp[num + 1])
-                    ctr += 1
-
     def readEdgeList(self, filename, G):
+        edge_list = []
         with open(filename, 'r') as f:
             fileList = list(f)
-            fileList = [[int(i) for i in x.strip('\n').split()] for x in fileList]
-        for edge in fileList:
-            G.add_edge(edge[0], edge[1], weight=edge[2])
+            fileList = [tuple(int(i) for i in x.strip('\n').split()) for x in fileList]
+        G.add_weighted_edges_from(fileList)
 
     def validate(self, G):
         p = nx.single_source_dijkstra(G, 0)
@@ -132,20 +113,28 @@ class algorithm:
             return True
         else:
             for k, v in p[0].items():
-                print(k,v)
+                print(k,v,p[0][k])
                 # if p[0][k] != self.propertyMap[k]:
                 #     print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ", self.propertyMap[k])
             return False
 
-
 def main():
-    G = nx.path_graph(0)
-    # filename = 'file11.gr'
-    # filename = 'sampleGraph.gr'
-    filename = 'graph1.gr'
-    a = algorithm()
-    a.metisReader(filename, G)
-    a.deltaStepping(G)
+    # G = nx.DiGraph()
+    filename = 'sampleGraph.txt'
+    fh = open(filename,'r')
+    # G = nx.read_edgeList(filename,create_using=nx.DiGraph(),nodetype=int)
+    G = nx.read_weighted_edgelist(fh,nodetype=int)
+    fh.close()
+    # a = algorithm()
+    # a.readEdgeList(filename,G)
+    # a.deltaStepping(G)
+    nx.draw(G)
+    print(nx.info(G))
+    nx.draw_networkx_labels(G)
+    plt.show()
+    # plt.savefig("Graph.png",format="PNG")
+
+
     if not a.validate(G):
         print("Error : The algorithm is incorrect")
     else:
