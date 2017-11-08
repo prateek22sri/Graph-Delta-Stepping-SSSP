@@ -113,32 +113,27 @@ class algorithm:
             return True
         else:
             for k, v in p[0].items():
-                print(k,v,p[0][k])
-                # if p[0][k] != self.propertyMap[k]:
-                #     print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ", self.propertyMap[k])
+                if p[0][k] != self.propertyMap[k]:
+                    print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ", self.propertyMap[k])
             return False
 
 def main():
-    # G = nx.DiGraph()
-    filename = 'sampleGraph.txt'
-    fh = open(filename,'r')
-    # G = nx.read_edgeList(filename,create_using=nx.DiGraph(),nodetype=int)
-    G = nx.read_weighted_edgelist(fh,nodetype=int)
-    fh.close()
-    # a = algorithm()
-    # a.readEdgeList(filename,G)
-    # a.deltaStepping(G)
-    nx.draw(G)
+    G = nx.read_edgelist('sampleGraph.txt',nodetype=int, data=(('weight',int),), create_using=nx.DiGraph())
     print(nx.info(G))
-    nx.draw_networkx_labels(G)
-    plt.show()
-    # plt.savefig("Graph.png",format="PNG")
-
+    a = algorithm()
+    a.deltaStepping(G)
 
     if not a.validate(G):
         print("Error : The algorithm is incorrect")
     else:
         print("The shortest path from ", a.sourceVertex, " is ", a.propertyMap)
+
+    # visualize the graph
+    # pos = nx.spring_layout(G)
+    # nx.draw_networkx(G,pos)
+    # nx.draw_networkx_edge_labels(G,pos=pos)
+    # plt.show()
+
 
 
 if __name__ == '__main__':
