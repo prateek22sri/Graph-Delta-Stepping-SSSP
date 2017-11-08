@@ -132,16 +132,17 @@ class algorithm:
             return True
         else:
             for k, v in p[0].items():
-                if p[0][k] != self.propertyMap[k]:
-                    print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ",
-                          self.propertyMap[k])
+                print(k,v)
+                # if p[0][k] != self.propertyMap[k]:
+                #     print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ", self.propertyMap[k])
             return False
 
 
 def main():
     G = nx.path_graph(0)
-    filename = 'file11.gr'
+    # filename = 'file11.gr'
     # filename = 'sampleGraph.gr'
+    filename = 'graph1.gr'
     a = algorithm()
     a.metisReader(filename, G)
     a.deltaStepping(G)
