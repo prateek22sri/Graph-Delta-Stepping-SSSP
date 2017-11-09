@@ -7,7 +7,7 @@ Author : Prateek Srivastava
 Date Created : 09-23-2017
 
 Acknowledgements:
-Special Thanks to Marcin J Zalewski
+Marcin J Zalewski - marcin.zalewski@pnnl.gov
 
 Paper :
 @article{meyer_-stepping:_2003,
@@ -24,14 +24,14 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-class algorithm:
+class Algorithm:
     def __init__(self):
         self.distances = {}
         self.delta = 5
-        self.propertyMap = {}
+        self.property_map = {}
         self.workItems = []
-        self.sourceVertex = 0
-        self.infinity = 999999999
+        self.source_vertex = 1
+        self.infinity = float("inf")
         self.totalNodes = 0
         self.totalEdges = 0
         self.B = {}
@@ -44,96 +44,93 @@ class algorithm:
 
         x is the distance of the vertex and w is the index of the vertex in the property map
         """
-
-        if x < self.propertyMap[w]:
-
+        if x < self.property_map[w]:
             # check if there is an entry of w in the dictionary B
-            if self.propertyMap[w] != self.infinity:
-                if w in self.B[ceil(self.propertyMap[w] / self.delta)]:
+            if self.property_map[w] != self.infinity:
+                if w in self.B[ceil(self.property_map[w] / self.delta)]:
                     # check if the vertex is in the wrong bucket
-                    if ceil(x / self.delta) != ceil(self.propertyMap[w] / self.delta):
-                        self.B[ceil(self.propertyMap[w] / self.delta)].remove(w)
-                    else:
-                        self.B[ceil(x / self.delta)].append(w)
+                    if ceil(x / self.delta) != ceil(self.property_map[w] / self.delta):
+                        self.B[ceil(self.property_map[w] / self.delta)].remove(w)
+                    self.B[ceil(x / self.delta)].append(w)
 
             # if the dictionary entry does not exist
             else:
-                self.B[ceil(x / self.delta)] = [w]
+                if ceil(x/self.delta) not in self.B:
+                    self.B[ceil(x / self.delta)] = [w]
+                else:
+                    if w not in self.B[ceil(x / self.delta)]:
+                        self.B[ceil(x / self.delta)].append(w)
 
             # update the property map
-            self.propertyMap[w] = x
+            self.property_map[w] = x
 
-    def findRequests(self, vertices, kind, G):
+    def find_requests(self, vertices, kind, g):
 
         tmp = {}
         for u in vertices:
-            for v in G.neighbors(u):
-                edgeWeight = self.propertyMap[u] + G.get_edge_data(u, v)['weight']
+            for v in g.neighbors(u):
+                edge_weight = self.property_map[u] + g.get_edge_data(u, v)['weight']
                 if kind == 'light':
-                    if edgeWeight <= self.delta:
-                        tmp[v] = edgeWeight
+                    if edge_weight <= self.delta:
+                        tmp[v] = edge_weight
                 elif kind == 'heavy':
-                    if edgeWeight > self.delta:
-                        tmp[v] = edgeWeight
+                    if edge_weight > self.delta:
+                        tmp[v] = edge_weight
                 else:
                     return "Error: No such kind of edges " + kind
         return tmp
 
-    def relaxRequests(self, request):
+    def relax_requests(self, request):
         for key, value in request.items():
             self.relax(key, value)
 
-    def deltaStepping(self, G):
+    def delta_stepping(self, g):
         """ This is the main function to implement the algorithm """
-        for node in G.nodes():
-            self.propertyMap[node] = self.infinity
+        for node in g.nodes():
+            self.property_map[node] = self.infinity
 
-        self.relax(self.sourceVertex, 0)
+        self.relax(self.source_vertex, 0)
         while self.B:
             i = min(self.B.keys())
             r = []
             while i in self.B:
-                req = self.findRequests(self.B[i], 'light', G)
+                req = self.find_requests(self.B[i], 'light', g)
                 r += self.B[i]
                 del self.B[i]
-                self.relaxRequests(req)
-            req = self.findRequests(r, 'heavy', G)
-            self.relaxRequests(req)
+                self.relax_requests(req)
+            req = self.find_requests(r, 'heavy', g)
+            self.relax_requests(req)
 
-    def readEdgeList(self, filename, G):
-        edge_list = []
-        with open(filename, 'r') as f:
-            fileList = list(f)
-            fileList = [tuple(int(i) for i in x.strip('\n').split()) for x in fileList]
-        G.add_weighted_edges_from(fileList)
-
-    def validate(self, G):
-        p = nx.single_source_dijkstra(G, 0)
-        if p[0] == self.propertyMap:
+    def validate(self, g):
+        p = nx.single_source_dijkstra(g, 1)
+        if p[0] == self.property_map:
             return True
         else:
+            print("Error: The algorithm is faulty!!!")
             for k, v in p[0].items():
-                if p[0][k] != self.propertyMap[k]:
-                    print(k, " value in ground truth is ", p[0][k], " and value in delta stepping is ", self.propertyMap[k])
+                if p[0][k] != self.property_map[k]:
+                    print("vertex ", k, " value in ground truth is ", p[0][k], " and value in delta stepping is ",
+                          self.property_map[k])
             return False
 
-def main():
-    G = nx.read_edgelist('sampleGraph.txt',nodetype=int, data=(('weight',int),), create_using=nx.DiGraph())
-    print(nx.info(G))
-    a = algorithm()
-    a.deltaStepping(G)
 
-    if not a.validate(G):
-        print("Error : The algorithm is incorrect")
+def main():
+    g = nx.read_edgelist('file15', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
+    # print(nx.info(g))
+    a = Algorithm()
+    a.delta_stepping(g)
+
+    if not a.validate(g):
+        exit(1)
     else:
-        print("The shortest path from ", a.sourceVertex, " is ", a.propertyMap)
+        print("The shortest path from ", a.source_vertex, " is ", a.property_map)
 
     # visualize the graph
-    # pos = nx.spring_layout(G)
-    # nx.draw_networkx(G,pos)
-    # nx.draw_networkx_edge_labels(G,pos=pos)
-    # plt.show()
-
+    # pos = nx.spring_layout(g)
+    # nx.draw_networkx(g, pos)
+    # nx.draw_networkx_edge_labels(g, pos=pos)
+    # plt.show(block=False)
+    # plt.savefig("sample1_graph")
 
 
 if __name__ == '__main__':

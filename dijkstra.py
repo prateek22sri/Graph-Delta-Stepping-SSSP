@@ -58,7 +58,7 @@ def dijkstra(graph, initial):
 
 def main():
     g = Graph()
-    with open('sampleGraph.txt') as f:
+    with open('sample2') as f:
         fileList = list(f)
         fileList = [[int(i) for i in x.strip('\n').split()] for x in fileList]
     for edge in fileList:
