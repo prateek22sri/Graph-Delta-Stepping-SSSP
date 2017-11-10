@@ -19,7 +19,7 @@ Paper :
        doi = {10.1016/S0196-6774(03)00076-2},
 """
 
-from math import ceil
+from math import floor
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -47,19 +47,19 @@ class Algorithm:
         if x < self.property_map[w]:
             # check if there is an entry of w in the dictionary B
             if self.property_map[w] != self.infinity:
-                if w in self.B[ceil(self.property_map[w] / self.delta)]:
+                if w in self.B[floor(self.property_map[w] / self.delta)]:
                     # check if the vertex is in the wrong bucket
-                    if ceil(x / self.delta) != ceil(self.property_map[w] / self.delta):
-                        self.B[ceil(self.property_map[w] / self.delta)].remove(w)
-                    self.B[ceil(x / self.delta)].append(w)
+                    if floor(x / self.delta) != floor(self.property_map[w] / self.delta):
+                        self.B[floor(self.property_map[w] / self.delta)].remove(w)
+                self.B[floor(x / self.delta)].append(w)
 
             # if the dictionary entry does not exist
             else:
-                if ceil(x/self.delta) not in self.B:
-                    self.B[ceil(x / self.delta)] = [w]
+                if floor(x/self.delta) not in self.B:
+                    self.B[floor(x / self.delta)] = [w]
                 else:
-                    if w not in self.B[ceil(x / self.delta)]:
-                        self.B[ceil(x / self.delta)].append(w)
+                    if w not in self.B[floor(x / self.delta)]:
+                        self.B[floor(x / self.delta)].append(w)
 
             # update the property map
             self.property_map[w] = x
@@ -71,10 +71,10 @@ class Algorithm:
             for v in g.neighbors(u):
                 edge_weight = self.property_map[u] + g.get_edge_data(u, v)['weight']
                 if kind == 'light':
-                    if edge_weight <= self.delta:
+                    if g.get_edge_data(u, v)['weight'] < self.delta:
                         tmp[v] = edge_weight
                 elif kind == 'heavy':
-                    if edge_weight > self.delta:
+                    if g.get_edge_data(u, v)['weight'] >= self.delta:
                         tmp[v] = edge_weight
                 else:
                     return "Error: No such kind of edges " + kind
@@ -88,11 +88,10 @@ class Algorithm:
         """ This is the main function to implement the algorithm """
         for node in g.nodes():
             self.property_map[node] = self.infinity
-
+        r = []
         self.relax(self.source_vertex, 0)
         while self.B:
             i = min(self.B.keys())
-            r = []
             while i in self.B:
                 req = self.find_requests(self.B[i], 'light', g)
                 r += self.B[i]
@@ -115,7 +114,7 @@ class Algorithm:
 
 
 def main():
-    g = nx.read_edgelist('file15', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
+    g = nx.read_edgelist('file14', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
     # print(nx.info(g))
     a = Algorithm()
     a.delta_stepping(g)
@@ -129,7 +128,7 @@ def main():
     # pos = nx.spring_layout(g)
     # nx.draw_networkx(g, pos)
     # nx.draw_networkx_edge_labels(g, pos=pos)
-    # plt.show(block=False)
+    # plt.show(block=True)
     # plt.savefig("sample1_graph")
 
 
