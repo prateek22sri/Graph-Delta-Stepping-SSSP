@@ -19,7 +19,7 @@ Paper :
        doi = {10.1016/S0196-6774(03)00076-2},
 """
 
-from math import floor
+from math import floor, sqrt
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -55,7 +55,7 @@ class Algorithm:
 
             # if the dictionary entry does not exist
             else:
-                if floor(x/self.delta) not in self.B:
+                if floor(x / self.delta) not in self.B:
                     self.B[floor(x / self.delta)] = [w]
                 else:
                     if w not in self.B[floor(x / self.delta)]:
@@ -114,8 +114,8 @@ class Algorithm:
 
 
 def main():
-    g = nx.read_edgelist('file14', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
-    # print(nx.info(g))
+    g = nx.read_edgelist('sample1', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
+    print(nx.info(g))
     a = Algorithm()
     a.delta_stepping(g)
 
@@ -125,11 +125,13 @@ def main():
         print("The shortest path from ", a.source_vertex, " is ", a.property_map)
 
     # visualize the graph
-    # pos = nx.spring_layout(g)
+    # pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
     # nx.draw_networkx(g, pos)
-    # nx.draw_networkx_edge_labels(g, pos=pos)
-    # plt.show(block=True)
-    # plt.savefig("sample1_graph")
+    # edge_labels = dict([((u, v,), d['weight'])
+    #                     for u, v, d in g.edges(data=True)])
+    # nx.draw_networkx_edge_labels(g, pos=pos,edge_labels=edge_labels,label_pos=0.3, font_size=7)
+    # plt.show(block=False)
+    # plt.savefig("sample1_graph.png")
 
 
 if __name__ == '__main__':
