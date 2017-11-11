@@ -6,7 +6,7 @@ This code is implementation of sequential Delta Stepping
 Author : Prateek Srivastava
 Date Created : 09-23-2017
 
-Acknowledgements:
+Base DeltaStepping Algorithm Acknowledgements:
 Marcin J Zalewski - marcin.zalewski@pnnl.gov
 
 Paper :
