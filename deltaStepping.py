@@ -25,7 +25,14 @@ import matplotlib.pyplot as plt
 
 
 class Algorithm:
+    """
+
+    """
+
     def __init__(self):
+        """
+
+        """
         self.distances = {}
         self.delta = 5
         self.property_map = {}
@@ -37,7 +44,6 @@ class Algorithm:
         self.B = {}
 
     def relax(self, w, x):
-
         """
         This function relaxes a bucket i.e. if the distance of a vertex is less than the already existing distance in
         the property map then, the vertex is removed from the bucket and reinserted in the new bucket
@@ -101,11 +107,21 @@ class Algorithm:
         return tmp
 
     def relax_requests(self, request):
+        """
+
+        :param request:
+        :return:
+        """
         for key, value in request.items():
             self.relax(key, value)
 
     def delta_stepping(self, g):
-        """ This is the main function to implement the algorithm """
+        """
+        This is the main function to implement the algorithm
+
+        :param g:
+        :return:
+        """
         for node in g.nodes():
             self.property_map[node] = self.infinity
         self.relax(self.source_vertex, 0)
@@ -135,6 +151,11 @@ class Algorithm:
             ctr += 1
 
     def validate(self, g):
+        """
+
+        :param g:
+        :return:
+        """
         p = nx.single_source_dijkstra(g, 1)
         if p[0] == self.property_map:
             return True
@@ -148,7 +169,8 @@ class Algorithm:
 
 
 def main():
-    g = nx.read_edgelist('file16', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
+    make_graph = False
+    g = nx.read_edgelist('file17', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
     # print(nx.info(g))
     a = Algorithm()
     a.delta_stepping(g)
@@ -159,13 +181,14 @@ def main():
         print("The shortest path from ", a.source_vertex, " is ", a.property_map)
 
         # visualize the graph
-        # pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
-        # nx.draw_networkx(g, pos)
-        # edge_labels = dict([((u, v,), d['weight'])
-        #                     for u, v, d in g.edges(data=True)])
-        # nx.draw_networkx_edge_labels(g, pos=pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
-        # plt.show(block=True)
-        # plt.savefig("sample1_graph.png")
+        if make_graph:
+            pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
+            nx.draw_networkx(g, pos)
+            edge_labels = dict([((u, v,), d['weight'])
+                                for u, v, d in g.edges(data=True)])
+            nx.draw_networkx_edge_labels(g, pos=pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
+            plt.show(block=True)
+            plt.savefig("sample1_graph.png")
 
 
 if __name__ == '__main__':
