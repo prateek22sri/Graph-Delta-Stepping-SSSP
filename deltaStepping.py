@@ -44,6 +44,7 @@ class Algorithm:
 
         x is the distance of the vertex and w is the index of the vertex in the property map
         """
+        # print("w=", w, "x=", x)
         if x < self.property_map[w]:
             # check if there is an entry of w in the dictionary B
             if self.property_map[w] != self.infinity:
@@ -65,19 +66,38 @@ class Algorithm:
             self.property_map[w] = x
 
     def find_requests(self, vertices, kind, g):
+        """
+        returns a dictionary of neighboring edges with their weights but according to the kind i.e. light or heavy
+
+        :param vertices:
+        :param kind:
+        :param g:
+        :return:
+        """
 
         tmp = {}
+        # print("vertices=", vertices, "kind=", kind)
         for u in vertices:
             for v in g.neighbors(u):
+                # print(u, self.property_map[u], g.get_edge_data(u, v)['weight'])
                 edge_weight = self.property_map[u] + g.get_edge_data(u, v)['weight']
                 if kind == 'light':
-                    if g.get_edge_data(u, v)['weight'] < self.delta:
-                        tmp[v] = edge_weight
+                    if g.get_edge_data(u, v)['weight'] <= self.delta:
+                        if v in tmp:
+                            if edge_weight < tmp[v]:
+                                tmp[v] = edge_weight
+                        else:
+                            tmp[v] = edge_weight
                 elif kind == 'heavy':
-                    if g.get_edge_data(u, v)['weight'] >= self.delta:
-                        tmp[v] = edge_weight
+                    if g.get_edge_data(u, v)['weight'] > self.delta:
+                        if v in tmp:
+                            if edge_weight < tmp[v]:
+                                tmp[v] = edge_weight
+                        else:
+                            tmp[v] = edge_weight
                 else:
                     return "Error: No such kind of edges " + kind
+        # print("tmp=", tmp)
         return tmp
 
     def relax_requests(self, request):
@@ -88,17 +108,31 @@ class Algorithm:
         """ This is the main function to implement the algorithm """
         for node in g.nodes():
             self.property_map[node] = self.infinity
-        r = []
         self.relax(self.source_vertex, 0)
+        # print(self.B, self.property_map)
+        ctr = 0
         while self.B:
+            # print("Parent Iteration=", ctr)
+            # print("bucket=", self.B)
             i = min(self.B.keys())
+            sub_ctr = 0
+            r = []
+
             while i in self.B:
+                # print("Child Iteration=", sub_ctr)
+                # print("B[i]=", self.B[i])
                 req = self.find_requests(self.B[i], 'light', g)
+                # print("req=", req)
                 r += self.B[i]
                 del self.B[i]
                 self.relax_requests(req)
+                sub_ctr += 1
+                # print(self.B)
+            # print("child ends")
+            # print("r=", r)
             req = self.find_requests(r, 'heavy', g)
             self.relax_requests(req)
+            ctr += 1
 
     def validate(self, g):
         p = nx.single_source_dijkstra(g, 1)
@@ -114,8 +148,8 @@ class Algorithm:
 
 
 def main():
-    g = nx.read_edgelist('sample1', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
-    print(nx.info(g))
+    g = nx.read_edgelist('file16', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
+    # print(nx.info(g))
     a = Algorithm()
     a.delta_stepping(g)
 
@@ -124,14 +158,14 @@ def main():
     else:
         print("The shortest path from ", a.source_vertex, " is ", a.property_map)
 
-    # visualize the graph
-    # pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
-    # nx.draw_networkx(g, pos)
-    # edge_labels = dict([((u, v,), d['weight'])
-    #                     for u, v, d in g.edges(data=True)])
-    # nx.draw_networkx_edge_labels(g, pos=pos,edge_labels=edge_labels,label_pos=0.3, font_size=7)
-    # plt.show(block=False)
-    # plt.savefig("sample1_graph.png")
+        # visualize the graph
+        # pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
+        # nx.draw_networkx(g, pos)
+        # edge_labels = dict([((u, v,), d['weight'])
+        #                     for u, v, d in g.edges(data=True)])
+        # nx.draw_networkx_edge_labels(g, pos=pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
+        # plt.show(block=True)
+        # plt.savefig("sample1_graph.png")
 
 
 if __name__ == '__main__':
