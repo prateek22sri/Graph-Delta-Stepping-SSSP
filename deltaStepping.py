@@ -22,6 +22,7 @@ Paper :
 from math import floor, sqrt
 import networkx as nx
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 
 class Algorithm:
@@ -37,7 +38,7 @@ class Algorithm:
         self.delta = 5
         self.property_map = {}
         self.workItems = []
-        self.source_vertex = 1
+        self.source_vertex = 2
         self.infinity = float("inf")
         self.totalNodes = 0
         self.totalEdges = 0
@@ -156,7 +157,8 @@ class Algorithm:
         :param g:
         :return:
         """
-        p = nx.single_source_dijkstra(g, 1)
+        self.property_map = {k: v for k, v in self.property_map.items() if v != self.infinity}
+        p = nx.single_source_dijkstra(g, self.source_vertex)
         if p[0] == self.property_map:
             return True
         else:
@@ -170,25 +172,31 @@ class Algorithm:
 
 def main():
     make_graph = False
-    g = nx.read_edgelist('file17', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
-    # print(nx.info(g))
-    a = Algorithm()
-    a.delta_stepping(g)
+    g = nx.read_edgelist('sample2', nodetype=int, data=(('weight', int),), create_using=nx.DiGraph())
 
+    print("\nGraph Information..")
+    print("===================\n")
+    print(nx.info(g))
+    print("\nCalculating shortest path..")
+    a = Algorithm()
+    a.source_vertex = 2
+    a.delta_stepping(g)
+    print("\nValidating Solution..")
     if not a.validate(g):
         exit(1)
     else:
-        print("The shortest path from ", a.source_vertex, " is ", a.property_map)
+        print("\nThe shortest path from ", a.source_vertex, " is:")
+        pprint(a.property_map)
 
-        # visualize the graph
-        if make_graph:
-            pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
-            nx.draw_networkx(g, pos)
-            edge_labels = dict([((u, v,), d['weight'])
-                                for u, v, d in g.edges(data=True)])
-            nx.draw_networkx_edge_labels(g, pos=pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
-            plt.show(block=True)
-            plt.savefig("sample1_graph.png")
+    # visualize the graph
+    if make_graph:
+        pos = nx.spring_layout(g, k=5 / sqrt(g.order()))
+        nx.draw_networkx(g, pos)
+        edge_labels = dict([((u, v,), d['weight'])
+                            for u, v, d in g.edges(data=True)])
+        nx.draw_networkx_edge_labels(g, pos=pos, edge_labels=edge_labels, label_pos=0.3, font_size=7)
+        plt.show(block=False)
+        plt.savefig("sample1_graph.png")
 
 
 if __name__ == '__main__':
